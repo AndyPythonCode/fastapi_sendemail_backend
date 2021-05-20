@@ -1,6 +1,6 @@
-from fastapi.middleware.cors import CORSMiddleware
 from decouple import config
-from apps.email.routers import routerEmail
+from database.db import Conexion
+from fastapi.middleware.cors import CORSMiddleware
 
 # DESCRIPTION
 API_METADATA = {
@@ -9,8 +9,8 @@ API_METADATA = {
     'version': '0.0.2'
 }
 
-# ROUTERS
-URL_PATTERNS = (routerEmail,)
+# DATABASE
+CONEXION = Conexion()
 
 # SECURITY
 MIDDLEWARE = {
@@ -20,3 +20,9 @@ MIDDLEWARE = {
     'allow_methods': ["*"],
     'allow_headers': ["*"],
 }
+
+CREATE_TABLES = True
+
+GMAIL_USER: str = config('USER')
+
+GMAIL_PASSWORD: str = config('PASSWORD')
