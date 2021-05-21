@@ -10,38 +10,54 @@ routerEmail = APIRouter(
     tags=['Email']
 )
 
-
 @routerEmail.post('/')
 async def sendEmail(request: Email):
     # Drawing up
-    msg = EmailMessage()
+    msg_user = EmailMessage()
+    msg_me = EmailMessage()
 
-    msg.set_content(f"""
-        From: {GMAIL_USER}
-        To: {request.email}
+    # Send custom email to user
+    msg_user.set_content(f"""
+From: {GMAIL_USER}
+To: {request.email}
 
-        {request.message}
+Gracias por contactar conmigo, su mensaje me ha llegado!!!
+
+Contactaré con usted lo mas pronto posible desde mi correo personal andyarciniegas24@gmail.com
+Aca dejo mi WhatsApp: +1 (829-958-0083)
+
+Suerte!!!!
     """)
 
-    msg['Subject'] = request.title
-    msg['From'] = GMAIL_USER
-    msg['To'] = request.email
+    status_user = sending('Enviado!', GMAIL_USER, request.email, msg_user)
 
-    # Send email
-    status = sending(msg)
+    # Send custom email to my account
+    msg_me.set_content(f"""
+Hi i'm: {GMAIL_USER}
+    
+This user {request.email} want to talk with you.
+
+{request.message}
+
+{GMAIL_USER}, I will be around, bye bye...
+    """)
+
+    status_me = sending(request.title, GMAIL_USER, 'andyarciniegas24@gmail.com', msg_me)
 
     # added to database
     query = email.insert().values(**request.dict())
     last_record_id = await CONEXION.getDataBase().execute(query)
-    return {'id': last_record_id, **request.dict(), 'sent_email': status}
+    return {'id': last_record_id, **request.dict(), 'email': {'user': status_user, 'me': status_me}}
 
-
-def sending(msg):
+def sending(SUBJECT, FROM, TO, MSG):
     try:
+        MSG['Subject'] = SUBJECT
+        MSG['From'] = FROM
+        MSG['To'] = TO
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.ehlo()
         server.login(GMAIL_USER, GMAIL_PASSWORD)
-        server.send_message(msg)
+        server.send_message(MSG)
         server.quit()
     except:
         return False
